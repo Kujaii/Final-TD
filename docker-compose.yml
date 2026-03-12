@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    image: taskflow:latest
+    ports:
+      - "5000"
+    environment:
+      - REDIS_HOST=redis
+    networks:
+      - taskflow-net
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - taskflow-net
+
+networks:
+  taskflow-net:
+    driver: bridge
