@@ -35,15 +35,25 @@ jobs:
       - name: Build Docker image
         run: docker build -t taskflow:${{ github.sha }} .
 
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push image to GitHub Container Registry
+        run: |
+          docker tag taskflow:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/taskflow:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository_owner }}/taskflow:${{ github.sha }}
+
   security:
     runs-on: ubuntu-latest
     needs: build
     steps:
       - uses: actions/checkout@v4
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'taskflow:${{ github.sha }}'
+          image-ref: 'ghcr.io/${{ github.repository_owner }}/taskflow:${{ github.sha }}'
           format: 'table'
           severity: 'HIGH,CRITICAL'
           exit-code: '0' # bloque pas le pipeline pour test
